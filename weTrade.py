@@ -6,10 +6,14 @@ from pymongo import MongoClient
 import urllib
 from Yahoo_finance_script import get_stock_info, predict_next_day_prices
 from News_data_vader_sentiments import get_news_sentiment
-from datetime import datetime
 global symbol
 from datetime import datetime
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+MONGO_PASSWORD = os.getenv("MongoPassword")
 
 app = Flask(__name__)
 
@@ -18,7 +22,7 @@ app.secret_key = os.urandom(24)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Define the MongoDB connection string
-conn_string = "mongodb+srv://wetrade:" + urllib.parse.quote("stock_123") + \
+conn_string = "mongodb+srv://wetrade:" + urllib.parse.quote(MONGO_PASSWORD) + \
               "@cluster0.soxdr7e.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 # Connect to MongoDB using pymongo
