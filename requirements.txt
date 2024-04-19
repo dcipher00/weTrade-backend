@@ -5,5 +5,5 @@ pymongo==4.6.2
 yfinance==0.2.37
 statsmodels==0.14.2
 nltk==3.8.1
-requests==2.31.1
+requests==2.31.0
 python-dotenv==1.0.1
