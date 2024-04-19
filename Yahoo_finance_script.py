@@ -89,64 +89,64 @@ def EDA_analysis(data):
     upload_plot(plt, 'Box_plots.png', s3, bucket_name, uploaded_image_urls)
     plt.close()
 
-    # Convert 'Date' column to datetime format
-    data['Date'] = pd.to_datetime(data['Date'])
-
-    # Seasonal Plot (Assuming monthly data)
-    data['Month'] = data['Date'].dt.month
-    seasonal_data = data.groupby('Month')['High'].mean()
-    seasonal_data.plot(kind='bar')
-    plt.title('Average High Price by Month')
-    plt.xlabel('Month')
-    plt.ylabel('Average High Price')
-    upload_plot(plt, 'seasonal_plot.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Autocorrelation Plot
-    plot_acf(data['High'], lags=20)
-    upload_plot(plt, 'ACR.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Partial Autocorrelation Plot
-    plot_pacf(data['High'], lags=20)
-    upload_plot(plt, 'PCR.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Seasonal Plot (Assuming monthly data)
-    data['Month'] = data['Date'].dt.month
-    seasonal_data = data.groupby('Month')['High'].mean()
-    seasonal_data.plot(kind='bar')
-    plt.title('Average High Price by Month')
-    plt.xlabel('Month')
-    plt.ylabel('Average High Price')
-    upload_plot(plt, 'seasonality.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Rolling Statistics
-    rolling_mean = data['High'].rolling(window=30).mean()  # 30-day rolling mean
-    rolling_std = data['High'].rolling(window=30).std()  # 30-day rolling standard deviation
-    plt.plot(data['Date'], data['High'], label='High')
-    plt.plot(data['Date'], rolling_mean, label='30-Day Rolling Mean')
-    plt.plot(data['Date'], rolling_std, label='30-Day Rolling Std')
-    plt.legend()
-    upload_plot(plt, 'Rolling_mean.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Density Plot
-    data['High'].plot(kind='kde')
-    plt.title('Kernel Density Estimate of High Prices')
-    plt.xlabel('Price')
-    plt.ylabel('Density')
-    upload_plot(plt, 'KDE_high.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Lag Scatter Plot
-    plt.scatter(data['High'], data['High'].shift(-1))
-    plt.title('Lag Scatter Plot')
-    plt.xlabel('High (t)')
-    plt.ylabel('High (t+1)')
-    upload_plot(plt, 'Scatter.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
+    # # Convert 'Date' column to datetime format
+    # data['Date'] = pd.to_datetime(data['Date'])
+    #
+    # # Seasonal Plot (Assuming monthly data)
+    # data['Month'] = data['Date'].dt.month
+    # seasonal_data = data.groupby('Month')['High'].mean()
+    # seasonal_data.plot(kind='bar')
+    # plt.title('Average High Price by Month')
+    # plt.xlabel('Month')
+    # plt.ylabel('Average High Price')
+    # upload_plot(plt, 'seasonal_plot.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Autocorrelation Plot
+    # plot_acf(data['High'], lags=20)
+    # upload_plot(plt, 'ACR.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Partial Autocorrelation Plot
+    # plot_pacf(data['High'], lags=20)
+    # upload_plot(plt, 'PCR.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Seasonal Plot (Assuming monthly data)
+    # data['Month'] = data['Date'].dt.month
+    # seasonal_data = data.groupby('Month')['High'].mean()
+    # seasonal_data.plot(kind='bar')
+    # plt.title('Average High Price by Month')
+    # plt.xlabel('Month')
+    # plt.ylabel('Average High Price')
+    # upload_plot(plt, 'seasonality.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Rolling Statistics
+    # rolling_mean = data['High'].rolling(window=30).mean()  # 30-day rolling mean
+    # rolling_std = data['High'].rolling(window=30).std()  # 30-day rolling standard deviation
+    # plt.plot(data['Date'], data['High'], label='High')
+    # plt.plot(data['Date'], rolling_mean, label='30-Day Rolling Mean')
+    # plt.plot(data['Date'], rolling_std, label='30-Day Rolling Std')
+    # plt.legend()
+    # upload_plot(plt, 'Rolling_mean.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Density Plot
+    # data['High'].plot(kind='kde')
+    # plt.title('Kernel Density Estimate of High Prices')
+    # plt.xlabel('Price')
+    # plt.ylabel('Density')
+    # upload_plot(plt, 'KDE_high.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
+    #
+    # # Lag Scatter Plot
+    # plt.scatter(data['High'], data['High'].shift(-1))
+    # plt.title('Lag Scatter Plot')
+    # plt.xlabel('High (t)')
+    # plt.ylabel('High (t+1)')
+    # upload_plot(plt, 'Scatter.png', s3, bucket_name, uploaded_image_urls)
+    # plt.close()
 
     print("All images uploaded successfully to S3.")
     print("Uploaded Image URLs:")
