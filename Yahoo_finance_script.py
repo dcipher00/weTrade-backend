@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import boto3
 import os
 from dotenv import load_dotenv
+import uuid
 
 load_dotenv()
 
@@ -44,11 +45,14 @@ def get_stock_info(symbol):
 
 
 def EDA_analysis(data):
+    company_name = data.symbol.unique()[0]
     data = data.drop(columns=['symbol'])
 
     # Initialize Boto3 S3 client
     s3 = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)
     bucket_name = 'rjbigdataimages'
+    unique_id = uuid.uuid4()
+    file_name = f'{company_name}_{unique_id}.png'
 
     # Store URLs of uploaded images
     uploaded_image_urls = []
@@ -63,96 +67,42 @@ def EDA_analysis(data):
     plt.xlabel('Date')
     plt.ylabel('Price')
     plt.legend()
-    upload_plot(plt, 'time_series.png', s3, bucket_name, uploaded_image_urls)
+    upload_plot(plt, f'time_series_{file_name}', s3, bucket_name, uploaded_image_urls)
     plt.close()
 
-    # Histograms
-    data.hist(figsize=(10, 6))
-    plt.tight_layout()
-    upload_plot(plt, 'hist.png', s3, bucket_name, uploaded_image_urls)
-    plt.close()
-
-    # Volume Plot
+    # Volume Plot 
     plt.figure(figsize=(10, 6))
     plt.plot(data['Date'], data['Volume'], label='Volume', color='orange', marker='o')
     plt.title('Trading Volume Over Time')
     plt.xlabel('Date')
     plt.ylabel('Volume')
+    plt.gca().get_yaxis().get_major_formatter().set_scientific(False)  # Display actual numbers on the y-axis
     plt.legend()
-    upload_plot(plt, 'volume_vs_date.png', s3, bucket_name, uploaded_image_urls)
+    upload_plot(plt, f'volume_vs_date_{file_name}', s3, bucket_name, uploaded_image_urls)
     plt.close()
 
-    # Box Plot
-    plt.figure(figsize=(10, 6))
-    sns.boxplot(data=data[['Open', 'High', 'Low', 'Close']])
-    plt.title('Box Plot of Prices')
-    upload_plot(plt, 'Box_plots.png', s3, bucket_name, uploaded_image_urls)
+    # Average Price by Month
+    data['Date'] = pd.to_datetime(data['Date'])
+    data['Month'] = data['Date'].dt.month
+    seasonal_data = data.groupby('Month')['High'].mean()
+    seasonal_data.plot(kind='bar')
+    plt.title('Average High Price by Month')
+    plt.xlabel('Month')
+    plt.ylabel('Average High Price: ' + company_name)
+    upload_plot(plt, f'avg_high_price_{file_name}', s3, bucket_name, uploaded_image_urls)
     plt.close()
 
-    # # Convert 'Date' column to datetime format
-    # data['Date'] = pd.to_datetime(data['Date'])
-    #
-    # # Seasonal Plot (Assuming monthly data)
-    # data['Month'] = data['Date'].dt.month
-    # seasonal_data = data.groupby('Month')['High'].mean()
-    # seasonal_data.plot(kind='bar')
-    # plt.title('Average High Price by Month')
-    # plt.xlabel('Month')
-    # plt.ylabel('Average High Price')
-    # upload_plot(plt, 'seasonal_plot.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Autocorrelation Plot
-    # plot_acf(data['High'], lags=20)
-    # upload_plot(plt, 'ACR.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Partial Autocorrelation Plot
-    # plot_pacf(data['High'], lags=20)
-    # upload_plot(plt, 'PCR.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Seasonal Plot (Assuming monthly data)
-    # data['Month'] = data['Date'].dt.month
-    # seasonal_data = data.groupby('Month')['High'].mean()
-    # seasonal_data.plot(kind='bar')
-    # plt.title('Average High Price by Month')
-    # plt.xlabel('Month')
-    # plt.ylabel('Average High Price')
-    # upload_plot(plt, 'seasonality.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Rolling Statistics
-    # rolling_mean = data['High'].rolling(window=30).mean()  # 30-day rolling mean
-    # rolling_std = data['High'].rolling(window=30).std()  # 30-day rolling standard deviation
-    # plt.plot(data['Date'], data['High'], label='High')
-    # plt.plot(data['Date'], rolling_mean, label='30-Day Rolling Mean')
-    # plt.plot(data['Date'], rolling_std, label='30-Day Rolling Std')
-    # plt.legend()
-    # upload_plot(plt, 'Rolling_mean.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Density Plot
-    # data['High'].plot(kind='kde')
-    # plt.title('Kernel Density Estimate of High Prices')
-    # plt.xlabel('Price')
-    # plt.ylabel('Density')
-    # upload_plot(plt, 'KDE_high.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
-    #
-    # # Lag Scatter Plot
-    # plt.scatter(data['High'], data['High'].shift(-1))
-    # plt.title('Lag Scatter Plot')
-    # plt.xlabel('High (t)')
-    # plt.ylabel('High (t+1)')
-    # upload_plot(plt, 'Scatter.png', s3, bucket_name, uploaded_image_urls)
-    # plt.close()
+    #Time Series Decomposition
+    result = seasonal_decompose(data['High'], model='additive', period=1)  # Assuming no seasonality
+    result.plot()
+    upload_plot(plt, f'series_decomposition_{file_name}', s3, bucket_name, uploaded_image_urls)
+    plt.close()
 
     print("All images uploaded successfully to S3.")
     print("Uploaded Image URLs:")
     file_urls_dict = {}
     for url in uploaded_image_urls:
-        file_name = url.split("/")[-1].split(".")[0]
+        file_name = url.split("/")[-1].split("_")[0]
         file_urls_dict[file_name] = url
 
     return file_urls_dict
@@ -174,31 +124,6 @@ def upload_plot(plt, filename, s3, bucket_name, uploaded_image_urls):
     print(f"Image '{filename}' uploaded successfully to S3.")
     print(f"URL: {image_url}")
 
-
-
-# META
-# symbol = "META"
-# info_meta, history_meta = get_stock_info(symbol)
-# # GOOGLE
-# symbol = "GOOG"
-# info_google, history_google = get_stock_info(symbol)
-#
-# # AMZN
-# symbol = "AMZN"
-# info_amzon, history_amazon = get_stock_info(symbol)
-# # APPLE
-# symbol = "AAPL"
-# info_apple, history_apple = get_stock_info(symbol)
-#
-# symbol = "DNN"
-# info_meta, history_dnn = get_stock_info(symbol)
-
-# history_meta.tail()
-# data = pd.concat([history_meta, history_amazon, history_apple, history_google, history_dnn], axis=0)
-
-# df = data.reset_index()
-# df = df.drop(columns=['Dividends', 'Stock Splits', 'index'])
-# df.columns
 
 
 # Function to predict next day's high and low prices for each company
@@ -227,15 +152,3 @@ def predict_next_day_prices(company_df):
 
     return predicted_high.values[0], predicted_low.values[0]
 
-
-# Predict next day's high and low prices for each company
-# companies = df['symbol'].unique()
-# predictions = {}
-# for company in companies:
-#     company_df = df[df['symbol'] == company]
-#     predicted_high, predicted_low = predict_next_day_prices(company_df)
-#     predictions[company] = {'Predicted_High': predicted_high, 'Predicted_Low': predicted_low}
-#
-# # Print predictions for each company
-# for company, values in predictions.items():
-#     print(f"Company: {company}, Predicted High: {values['Predicted_High']}, Predicted Low: {values['Predicted_Low']}")

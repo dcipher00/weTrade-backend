@@ -4,6 +4,8 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import requests
 import pandas as pd
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 
 # Download NLTK data for sentiment analysis
 nltk.download('vader_lexicon')
@@ -15,6 +17,9 @@ import re
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, PorterStemmer
 from nltk.tokenize import word_tokenize
+
+load_dotenv()
+NEWS_API = os.getenv("NewsApi")
 
 
 def clean_text(text):
@@ -64,7 +69,7 @@ def get_stock_info(ticker):
 
 # Function to get financial news and analyze sentiment
 def get_news_sentiment(ticker):
-    news_url = f'https://newsapi.org/v2/everything?q={ticker}&apiKey=842242888d904e449e1c5248e0c83cb4'  # Replace 'your-api-key' with an actual API key if needed
+    news_url = f'https://newsapi.org/v2/everything?q={ticker}&apiKey={NEWS_API}'  # Replace 'your-api-key' with an actual API key if needed
 
     response = requests.get(news_url)
     news_data = response.json()

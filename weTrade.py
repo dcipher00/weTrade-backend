@@ -166,11 +166,15 @@ def process_data():
 
         news_symbol = get_news_sentiment(symbol)
         print(news_symbol)
-        overall_sentiment = (news_symbol.Description_sentiment.value_counts()).index[0]
-        news_json = news_symbol.to_dict(orient='records')
+        if news_symbol.empty:
+            overall_sentiment = 'neutral'
+        else:
+            
+            overall_sentiment = (news_symbol.Description_sentiment.value_counts()).index[0]
+            news_json = news_symbol.to_dict(orient='records')
+            collection = db['News_data']
 
-
-        collection = db['News_data']
+        
         # Insert data into MongoDB collection
         # collection.insert_many(news_json)
 
@@ -201,14 +205,6 @@ def process_data():
 
         return jsonify({'exists': False, 'sentiment': overall_sentiment, 'predicted_low': predicted_low, 'predicted_high': predicted_high, 'analysis': analysis})
 
-
-
-
-# Market data endpoint
-# @app.route('/market', methods=['GET'])
-# def get_market_data():
-#     # Logic to retrieve market data from MongoDB
-#     return jsonify({'message': 'Get market data'})
 
 
 if __name__ == '__main__':
