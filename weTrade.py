@@ -4,7 +4,7 @@ import pandas as pd
 from urllib.parse import quote_plus
 from pymongo import MongoClient
 import urllib
-from Yahoo_finance_script import get_stock_info, predict_next_day_prices
+from Yahoo_finance_script import get_stock_info, predict_next_day_prices, EDA_analysis
 from News_data_vader_sentiments import get_news_sentiment
 global symbol
 from datetime import datetime
@@ -45,7 +45,9 @@ def predict_stocks(symbol):
     print(predicted_high, predicted_low)
 
 
-    return predicted_high, predicted_low
+
+
+    return predicted_high, predicted_low, stock_price_data
 
 
 def delete_data(db,collection_name):
@@ -150,8 +152,9 @@ def process_data():
         predict_high = document.get('high')
         predict_low = document.get('low')
         sentiment = document.get('average_sentiment')
+        analysis = document.get('analysis')
 
-        return jsonify({'exists': True, 'sentiment': sentiment, 'predicted_low': predict_low, 'predicted_high': predict_high})
+        return jsonify({'exists': True, 'sentiment': sentiment, 'predicted_low': predict_low, 'predicted_high': predict_high, 'analysis':analysis})
 
     else:
         #for sentiemnts file:
@@ -162,6 +165,7 @@ def process_data():
         # delete_data(db,'Stock_data')
 
         news_symbol = get_news_sentiment(symbol)
+        print(news_symbol)
         overall_sentiment = (news_symbol.Description_sentiment.value_counts()).index[0]
         news_json = news_symbol.to_dict(orient='records')
 
@@ -170,18 +174,24 @@ def process_data():
         # Insert data into MongoDB collection
         # collection.insert_many(news_json)
 
-        predicted_high, predicted_low = predict_stocks(symbol)
+        predicted_high, predicted_low, stock_price_data = predict_stocks(symbol)
+        analysis_url_dict = EDA_analysis(stock_price_data)
+        analysis = [analysis_url_dict]
+
         final_df = {
             'symbol': [symbol],
             'date': [today_date],
             'high': [predicted_high],
             'low': [predicted_low],
-            'average_sentiment': [overall_sentiment]
+            'average_sentiment': [overall_sentiment],
+            'analysis': [analysis]
         }
         df = pd.DataFrame(final_df)
 
         # Convert DataFrame to JSON format
         output_json = df.to_dict(orient='records')
+
+
 
         # output_json = {'Symbol':symbol,'Date':today_date,'high':predicted_high,'low':predicted_low, 'average_sentiment': overall_sentiment}
         collection = db['Output']
@@ -189,7 +199,7 @@ def process_data():
         # output_df = pd.DataFrame(symbol, today_date, predicted_high, predicted_low, columns=['symbol', 'today_date', 'predicted_high', 'predicted_low'])
         print("**********", overall_sentiment,predicted_high, predicted_low, "*********")
 
-        return jsonify({'exists': False, 'sentiment': overall_sentiment, 'predicted_low': predicted_low, 'predicted_high': predicted_high})
+        return jsonify({'exists': False, 'sentiment': overall_sentiment, 'predicted_low': predicted_low, 'predicted_high': predicted_high, 'analysis': analysis})
 
 
 

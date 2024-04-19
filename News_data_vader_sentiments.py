@@ -64,7 +64,7 @@ def get_stock_info(ticker):
 
 # Function to get financial news and analyze sentiment
 def get_news_sentiment(ticker):
-    news_url = f'https://newsapi.org/v2/everything?q={ticker}&apiKey=78a8b8e3d13746febc614641e2592169'  # Replace 'your-api-key' with an actual API key if needed
+    news_url = f'https://newsapi.org/v2/everything?q={ticker}&apiKey=842242888d904e449e1c5248e0c83cb4'  # Replace 'your-api-key' with an actual API key if needed
 
     response = requests.get(news_url)
     news_data = response.json()
